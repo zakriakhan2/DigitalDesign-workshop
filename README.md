@@ -1,68 +1,139 @@
-```markdown
 # Digital Logic Design Workshop Tasks
 
-This repository contains Verilog RTL implementations, block schematics, and FSM state diagrams for two hardware design tasks: a **Pulse Width Modulation (PWM) Controller** and a **Multi-Product Vending Machine Controller**. Both tasks utilize decoupled Finite State Machine and Datapath (FSM+D) design principles.
+This repository contains Verilog RTL implementations, block schematics, and FSM state diagrams for two hardware design tasks:
+
+- **Pulse Width Modulation (PWM) Controller**
+- **Multi-Product Vending Machine Controller**
+
+Both designs follow the **Finite State Machine + Datapath (FSM+D)** architecture, separating the control path (FSM) from the datapath to improve modularity, readability, and scalability.
 
 ---
 
-## 1. PWM Task
+# Repository Structure
 
-### Directory & Files
 ```text
-PWM task/
-├── pwm datapath.png        # Datapath schematic (counter, registers, comparator)
-├── Pwm fsm.png             # FSM state transition diagram
-├── pwm top module.png      # Top-level module block diagram & pinouts
-├── pwm_datapath.v          # Datapath RTL implementation
-├── pwm_fsm.v               # FSM control unit RTL implementation
-└── pwm_top.v               # Top-level wrapper connecting FSM and Datapath
-
+.
+├── PWM task/
+│   ├── pwm datapath.png
+│   ├── Pwm fsm.png
+│   ├── pwm top module.png
+│   ├── pwm_datapath.v
+│   ├── pwm_fsm.v
+│   └── pwm_top.v
+│
+└── Vending Machine task/
+    ├── datapath.png
+    ├── FSM.png
+    ├── top module block diagram.png
+    ├── datapath.v
+    ├── fsm.v
+    └── vending_top.v
 ```
 
-### Architecture Overview
+---
 
-The PWM core produces a precise square wave with variable duty cycle control using a counter-comparator architecture managed by an FSM control unit:
+# 1. Pulse Width Modulation (PWM) Controller
 
-* **`pwm top module`**: Top-level wrapper interconnecting the control unit and datapath modules.
-* **`Pwm fsm`**: Controls operation states, driving register load enables and counter initialization sequence.
-* **`pwm datapath`**: Houses the period counter, buffered duty cycle register (preventing output glitches during mid-period dynamic updates), and magnitude comparator generating `pwm_out`.
+## Directory
 
-### Module Interface
-
-| Port Name | Direction | Bit Width | Description |
-| --- | --- | --- | --- |
-| `clk` | Input | 1 | Primary system clock |
-| `rst` | Input | 1 | Synchronous reset line |
-| `duty_in` | Input | `[N-1:0]` | Parallel input threshold for duty cycle |
-| `load_en` | Input | 1 | Control trigger to update duty cycle threshold |
-| `pwm_out` | Output | 1 | Generated PWM square-wave output |
-
-### Verification & Waveform Inspection
-
-1. Import all Verilog source files (`pwm_datapath.v`, `pwm_fsm.v`, `pwm_top.v`) into your simulation environment (e.g., Vivado, ModelSim, Icarus Verilog).
-2. Reference `pwm top module.png` for top-level port bindings during testbench instantiation.
-3. Compare output signal waveforms directly against state transitions in `Pwm fsm.png` and functional blocks in `pwm datapath.png`.
+```text
+PWM task/
+├── pwm datapath.png
+├── Pwm fsm.png
+├── pwm top module.png
+├── pwm_datapath.v
+├── pwm_fsm.v
+└── pwm_top.v
+```
 
 ---
 
-## 2. Vending Machine Task
+## Architecture Overview
 
-### Directory & Files
+The PWM controller generates a square wave with a programmable duty cycle using a counter-comparator architecture controlled by a finite state machine.
+
+The design is divided into three modules:
+
+### `pwm_top`
+
+Top-level wrapper that connects the FSM and datapath modules while exposing the external interface.
+
+### `pwm_fsm`
+
+Implements the control unit responsible for:
+
+- Counter initialization
+- Register load control
+- Operational state sequencing
+
+### `pwm_datapath`
+
+Implements the hardware responsible for:
+
+- PWM period counter
+- Buffered duty-cycle register
+- Magnitude comparator
+- PWM output generation
+
+The buffered duty-cycle register ensures that updates occurring during an active PWM period do not introduce output glitches.
+
+---
+
+## Module Interface
+
+| Port | Direction | Width | Description |
+|------|-----------|-------|-------------|
+| `clk` | Input | 1 | System clock |
+| `rst` | Input | 1 | Synchronous reset |
+| `duty_in` | Input | `[N-1:0]` | Desired duty-cycle value |
+| `load_en` | Input | 1 | Loads a new duty-cycle value |
+| `pwm_out` | Output | 1 | Generated PWM waveform |
+
+---
+
+## File Descriptions
+
+| File | Description |
+|------|-------------|
+| `pwm_datapath.v` | Datapath RTL implementation |
+| `pwm_fsm.v` | FSM controller RTL implementation |
+| `pwm_top.v` | Top-level module connecting FSM and datapath |
+| `pwm datapath.png` | Datapath schematic |
+| `Pwm fsm.png` | FSM state diagram |
+| `pwm top module.png` | Top-level block diagram |
+
+---
+
+## Verification
+
+1. Import all Verilog source files into your simulator (Vivado, ModelSim, Icarus Verilog, etc.).
+2. Instantiate `pwm_top.v` in the testbench.
+3. Use **pwm top module.png** for port mapping.
+4. Compare waveform behavior with:
+   - `Pwm fsm.png`
+   - `pwm datapath.png`
+
+---
+
+# 2. Multi-Product Vending Machine Controller
+
+## Directory
 
 ```text
 Vending Machine task/
-├── datapath.png                  # Datapath schematic (registers, arithmetic, MUXes)
-├── FSM.png                       # FSM Moore state transition diagram
-├── top module block diagram.png  # Top-level system interconnections
-├── datapath.v                    # Datapath RTL implementation
-├── fsm.v                         # FSM control unit RTL implementation
-└── vending_top.v                 # Top-level module connecting FSM and Datapath
-
+├── datapath.png
+├── FSM.png
+├── top module block diagram.png
+├── datapath.v
+├── fsm.v
+└── vending_top.v
 ```
 
-### Architecture Overview
+---
 
-The vending machine controller isolates high-bit data manipulation and storage from state transition decision logic:
+## Architecture Overview
+
+The vending machine controller follows the **FSM + Datapath** design methodology by separating control logic from arithmetic and storage hardware.
 
 ```text
                   +-----------------------------------+
@@ -72,40 +143,148 @@ Inputs  --------->|  +-----------+     Control     +--|------> Outputs
                   |  |    FSM    |================>|  |
 Outputs <---------|--| (Control) |<================|  |
                   |  +-----------+     Status      +--|
-                  |                            datapath
+                  |                            Datapath
                   +-----------------------------------+
-
 ```
 
-* **`FSM.png` (Control Path):** A Moore-type finite state machine handling state progression (`IDLE`, `SELECT`, `DISPENSE`, `RETURN_CHANGE`, `CANCEL`, `INSUFFICIENT`, `OUT_OF_STOCK`) driven by datapath status flags.
-* **`datapath.png` (Datapath):** Contains product selection registers, saturating balance registers ($10 limit), inventory stock counters with active-high non-zero checks (`stock > 0`), and a resource-shared subtractor block.
-* **`top module block diagram.png`:** Illustrates direct port bindings connecting FSM control outputs to datapath inputs and datapath status outputs to FSM inputs.
+The architecture consists of three primary modules.
 
-### Key Hardware Features
+### `vending_top`
 
-* **Unified Selection Processing:** Employs a generalized selection register and MUX structure in the datapath, keeping the core state machine compact and scalable.
-* **Resource Sharing:** Reuses a single subtractor block for both purchase price deduction (`Balance - Price`) and transaction cancellations/refunds (`Balance - 0`).
-* **Active-High Logic Consistency:** All status signals (`balance_ok`, `in_stock`) evaluate high (`1`) when conditions are valid.
+Top-level wrapper interconnecting the FSM and datapath while exposing the external interface.
 
-### Control & Status Signal Interface
+### `fsm`
 
-#### Control Signals (FSM -> Datapath)
+Implements a Moore finite state machine responsible for transaction control.
 
-* `dispense_en`: Actuates output dispenser logic for the selected product.
-* `write_stock_en`: Decrements inventory counter for the selected product slot.
-* `cancel_mux_sel`: Routes item price or `$0` to the subtractor input.
-* `clear_balance`: Resets balance register following transaction completion or refund.
+The controller transitions between the following states:
 
-#### Status Signals (Datapath -> FSM)
+- `IDLE`
+- `SELECT`
+- `DISPENSE`
+- `RETURN_CHANGE`
+- `CANCEL`
+- `INSUFFICIENT`
+- `OUT_OF_STOCK`
 
-* `balance_ok`: High when `current_balance >= item_price`.
-* `in_stock`: High when selected product inventory is greater than zero (`stock > 0`).
+State transitions depend entirely on status signals generated by the datapath.
 
-### Verification & Cross-Reference
+### `datapath`
 
-* **FSM Debugging:** Trace state transitions in your waveform viewer against the node path defined in `FSM.png`.
-* **Datapath Debugging:** Verify arithmetic results (balance updates, price deductions, stock decrements) against hardware connections in `datapath.png`.
+Implements all storage and arithmetic hardware, including:
 
-```
+- Product selection registers
+- Balance register (saturating at **$10**)
+- Inventory counters
+- Resource-shared subtractor
+- Multiplexers
+- Status flag generation
 
-```
+---
+
+## Key Hardware Features
+
+### Unified Selection Processing
+
+A generalized selection register and multiplexing structure support multiple products while keeping the FSM compact and scalable.
+
+### Resource Sharing
+
+A single subtractor performs both:
+
+- Purchase deduction
+
+  ```
+  Balance − Price
+  ```
+
+- Refund calculation
+
+  ```
+  Balance − 0
+  ```
+
+This minimizes hardware utilization.
+
+### Active-High Status Signals
+
+All datapath status outputs are active high.
+
+- `balance_ok = 1` when:
+
+  ```
+  current_balance >= item_price
+  ```
+
+- `in_stock = 1` when:
+
+  ```
+  stock > 0
+  ```
+
+---
+
+## Control Signals (FSM → Datapath)
+
+| Signal | Description |
+|---------|-------------|
+| `dispense_en` | Dispenses the selected product |
+| `write_stock_en` | Decrements inventory of selected product |
+| `cancel_mux_sel` | Selects refund or purchase operation |
+| `clear_balance` | Clears balance after purchase or refund |
+
+---
+
+## Status Signals (Datapath → FSM)
+
+| Signal | Description |
+|---------|-------------|
+| `balance_ok` | High when the inserted balance is sufficient |
+| `in_stock` | High when the selected item is available |
+
+---
+
+## File Descriptions
+
+| File | Description |
+|------|-------------|
+| `datapath.v` | Datapath RTL implementation |
+| `fsm.v` | FSM controller RTL implementation |
+| `vending_top.v` | Top-level wrapper |
+| `datapath.png` | Datapath schematic |
+| `FSM.png` | Moore FSM state diagram |
+| `top module block diagram.png` | Top-level architecture diagram |
+
+---
+
+## Verification
+
+1. Import all Verilog source files into your simulator.
+2. Instantiate `vending_top.v`.
+3. Use **top module block diagram.png** for port mapping.
+4. Verify state transitions using **FSM.png**.
+5. Verify arithmetic operations and register updates using **datapath.png**.
+
+---
+
+# Design Methodology
+
+Both projects employ the **Finite State Machine + Datapath (FSM+D)** design methodology.
+
+- The **FSM** contains only sequencing and decision-making logic.
+- The **Datapath** performs arithmetic, storage, comparisons, and status generation.
+- The **Top Module** connects both components, producing a modular and reusable architecture suitable for digital hardware design.
+
+---
+
+# Simulation
+
+The projects can be simulated using standard Verilog simulators such as:
+
+- Xilinx Vivado Simulator
+- ModelSim
+- QuestaSim
+- Icarus Verilog
+- Verilator
+
+Import all RTL files for the corresponding design and instantiate the top-level module in your testbench.
